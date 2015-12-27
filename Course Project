@@ -107,7 +107,8 @@ confusionMatrix(train2$classe, preds)
 ## Detection Rate          0.284    0.193    0.174    0.163    0.184
 ## Detection Prevalence    0.284    0.194    0.174    0.164    0.184
 ## Balanced Accuracy       0.999    0.999    0.998    0.998    1.000
-The accuracy is 99.8%, thus my predicted accuracy for the out-of-sample error is 0.2%.
+##The accuracy is 99.8%.
+## out-of-sample error is 0.2%.
 
 #Re-training the Selected Model
 #Before predicting on the test set, it is important to train the model on the full training set (train), rather than using a model trained on a reduced training set (train1), in order to produce the most accurate predictions. Therefore,repeat above on train and test:
