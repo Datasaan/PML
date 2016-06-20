@@ -1,0 +1,100 @@
+#Human Activity Recognition
+# Modelling the weight Lifting Exercises Dataset
+Human activity recognition research has traditionally focused on discriminating between different activities, i.e. to predict "which" activity was performed at a specific point in time.The approach  proposed for the Weight Lifting Exercises dataset is to investigate "how (well)" an activity was performed by the wearer. The "how (well)" investigation has only received little attention so far, even though it potentially provides useful information for a large variety of applications,such as sports training.
+
+##The Data
+Six young health participants were asked to perform one set of 10 repetitions of the Unilateral Dumbbell Biceps Curl in five different fashions: exactly according to the specification (Class A), throwing the elbows to the front (Class B), lifting the dumbbell only halfway (Class C), lowering the dumbbell only halfway (Class D) and throwing the hips to the front (Class E).
+
+Class A corresponds to the specified execution of the exercise, while the other 4 classes correspond to common mistakes. Participants were supervised by an experienced weight lifter to make sure the execution complied to the manner they were supposed to simulate. The exercises were performed by six male participants aged between 20-28 years, with little weight lifting experience. We made sure that all participants could easily simulate the mistakes in a safe and controlled manner by using a relatively light dumbbell (1.25kg).
+
+Measurements were taken by placing one gyroscope, one accelerometer and one magnetometer each on the forearm, dumbbell,arm and belt of the participants.
+ 
+My aim is to take the dataset containing these measurements and create a model to predict the class(A-E).
+
+
+##Getting and Cleaning
+
+```{r, echo=T}
+library(caret)
+train=read.csv("pml-training.csv")
+```
+
+Handle the missing values 
+```{r, echo=T}
+miss=as.numeric(lapply(train,function(x){sum(is.na(x))}))
+i=which(train$new_window=="yes")
+j=which(miss==19216)
+ptrain=train[-i,]
+ptrain=ptrain[,-j]
+```
+
+change class to numeric for all columns except for name and classe
+
+```{r, echo=T}
+for(i in 4:92)
+{
+  ptrain[,i]=as.numeric(ptrain[,i])
+}
+
+```
+
+Remove the variables with almost zero variance
+
+```{r, echo=T}
+i=nzv(ptrain)
+ptrain=ptrain[,-i]
+
+```
+
+Divide the data into training and test 
+
+```{r, echo=T}
+intrain=createDataPartition(ptrain$classe,p=0.7,list=F)
+tptrain=ptrain[intrain,]
+teptrain=ptrain[-intrain,]
+```
+
+Build a random forest model using only the summarising variables like total_accel_forearm and yaw_belt etc.
+
+```{r, echo=T}
+m1=train(classe~total_accel_forearm+yaw_forearm+pitch_forearm+roll_forearm+total_accel_dumbbell+yaw_dumbbell+pitch_dumbbell+roll_dumbbell+total_accel_arm+yaw_arm+pitch_arm+roll_arm+total_accel_belt+yaw_belt+pitch_belt+roll_belt,data=tptrain,method="rf")
+
+```
+
+Confusion matrix using test data we created earlier
+
+```{r, echo=T}
+confusionMatrix(predict(m1,teptrain),teptrain$classe)
+
+```
+
+Precission and Recall are good. So, I won't change the model.
+
+Lets look the variable importance plot 
+
+```{r, echo=T}
+ plot(varImp(m1))
+
+```
+
+
+Lets predict it on the provided test data 
+
+
+```{r,echo =TRUE}
+test=read.csv("pml-testing.csv")
+ ptest=test[,-j]
+ for(t in 4:92)
+ {
+   ptest[,t]=as.numeric(ptest[,t])
+ }
+ ptest=ptest[,-i]
+predict(m1,ptest)
+
+```
+
+
+This dataset was obtained from the following research paper
+
+Velloso, E.; Bulling, A.; Gellersen, H.; Ugulino, W.; Fuks, H. Qualitative Activity Recognition of Weight Lifting Exercises. Proceedings of 4th International Conference in Cooperation with SIGCHI (Augmented Human '13) . Stuttgart, Germany: ACM SIGCHI, 2013.
+
